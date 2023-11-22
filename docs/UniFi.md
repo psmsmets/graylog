@@ -33,7 +33,7 @@ Add a stream rule: _syslog_source_ **must** match exactly _UniFi Network Applica
 
 | Name           | Pattern                                          |
 | -------------- | ------------------------------------------------ |
-| UBNT_DEVICENAME| `([a-zA-Z]+[_-])+([a-zA-Z]+[0-9]*)`              |
+| UBNT_DEVICENAME| `([a-zA-Z0-9_-]+)`                               |
 | UBNT_HOSTNAME  | `([a-zA-Z0-9-]+)`                                |
 | UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                          |
 | UBNT_VERSION   | `((?:[0-9]+).(?:[0-9]+).(?:[0-9]+)\+(?:[0-9]+))` |
