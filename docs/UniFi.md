@@ -119,12 +119,12 @@ end
 ```
 
 ```
-rule "Parse BSSID mac address from logs"
+rule "Parse STA mac address from logs"
 when
   true
 then
   let m = to_string(get_field("message"));
-  let extractedData = grok("bssid=%{MAC:bssid}", m);
+  let extractedData = grok("sta=%{MAC:bssid}", m);
   set_fields(extractedData);
 end
 ```
