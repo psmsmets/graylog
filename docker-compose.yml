@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
 
   graylog:
-    image: graylog/graylog:5.1
+    image: graylog/graylog:5.2
     container_name: graylog
     environment:
       # CHANGE ME (must be at least 16 characters)!
@@ -62,8 +62,8 @@ services:
       GRAYLOG_HTTP_EXTERNAL_URI: "http://localhost:9000/"
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
-      GRAYLOG_TIMEZONE: "America/Detroit"
-      TZ: "America/Detroit"
+      GRAYLOG_TIMEZONE: "Europe/Brussels"
+      TZ: "Europe/Brussels"
       GRAYLOG_TRANSPORT_EMAIL_PROTOCOL: "smtp"
       GRAYLOG_TRANSPORT_EMAIL_WEB_INTERFACE_URL: "http://192.168.3.233:9000/"
       GRAYLOG_TRANSPORT_EMAIL_HOSTNAME: "outbound.mailhop.org"
@@ -93,5 +93,8 @@ services:
       - 9000:9000/tcp   # Graylog web interface and REST API
       - 1514:1514/tcp   # Syslog
       - 1514:1514/udp   # Syslog
+      - 5140:5140/udp   # UniFi Controller
+      - 5141:5141/udp   # pfSense 1
+      - 5142:5142/udp   # pfSense 2
       - 12201:12201/tcp # GELF
       - 12201:12201/udp # GELF
