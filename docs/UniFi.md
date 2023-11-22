@@ -1,0 +1,145 @@
+# UniFi graylog configuration
+
+## Inputs
+
+Create a local input named `UniFi Network Application` of type `Syslog UDP` and port `5140`.
+
+Add a static field with name=`syslog_source` and value=`UniFi Network Application`.
+This field will be used to isolate all messages from the default stream.
+
+## Streams
+
+
+
+### Create stream
+
+Title = `UniFi Network Application`.
+
+Description = `Ubiquity Access Point logs`.
+
+
+Thick the box to remove matches from ‘Default Stream’.
+
+### Stream rules
+
+A message must match all of the following rules.
+
+Add one rule: _syslog_source_ **must** match exactly _UniFi Network Application_
+
+
+## Grok patterns
+
+| Name           | Pattern                                          |
+| -------------- | ------------------------------------------------ |
+| UBNT_DEVICENAME| `([a-zA-Z_-]+)`                                  |
+| UBNT_HOSTNAME  | `([a-zA-Z-]+)`                                   |
+| UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                          |
+| UBNT_VERSION   | `((?:[0-9]+).(?:[0-9]+).(?:[0-9]+)\+(?:[0-9]+))` |
+
+
+## Pipelines
+
+Create a pipeline named `UniFi Network Application` linked to the stream `UniFi Network Application` existing of four stages.
+
+
+### Stage 0
+
+Messages satisfying **all rules** in this stage, will continue to the next stage.
+
+```
+rule "Flatten json and parse"
+// From sample data : https://randomuser.me/api/
+// Api input path: *
+when
+    true
+then
+    let sJson = to_string($message.message);
+    let sJson = regex_replace(
+        pattern: "^\\[|\\]$",
+        value: sJson,
+        replacement: ""
+        );
+    let rsJson = flatten_json(to_string(sJson), "flatten");
+    set_fields(to_map(rsJson));
+    //remove_field("message");
+end
+```
+
+### Stage 1
+
+Messages satisfying **none or more rules** in this stage, will continue to the next stage.
+
+
+```
+rule "Drop messages with drop and log new"
+when
+  has_field("message") && contains(to_string($message.message), "drop and Log New")
+then
+    drop_message();
+end
+```
+
+```
+rule "Drop messages with no rule description"
+when
+  has_field("message") && contains(to_string($message.message), "no rule description")
+then
+    drop_message();
+end
+```
+
+### Stage 2
+
+Messages satisfying **none or more rules** in this stage, will continue to the next stage.
+
+```
+rule "Parse Ubiquity access point logs"
+when
+  true
+then
+  let m = to_string(get_field("message"));
+  let extractedData = grok("%{UBNT_HOSTNAME:ap_hostname} %{UBNT_ID:ap_id},%{UBNT_DEVICENAME:ap_name}-%{UBNT_VERSION:ap_version}:%{GREEDYDATA:message}", m);
+  set_fields(extractedData);
+  //set_field("ap_model", join(get_field("ap_model"), "-"));
+  remove_field("syslog_source");
+end
+```
+
+```
+rule "Parse BSSID mac address from logs"
+when
+  true
+then
+  let m = to_string(get_field("message"));
+  let extractedData = grok("bssid=%{MAC:bssid}", m);
+  set_fields(extractedData);
+end
+```
+
+```
+rule "Parse BSSID mac address from logs"
+when
+  true
+then
+  let m = to_string(get_field("message"));
+  let extractedData = grok("bssid=%{MAC:bssid}", m);
+  set_fields(extractedData);
+end
+```
+
+### Stage 3
+
+There are no further stages in this pipeline. 
+Once rules in this stage are applied, the pipeline will have finished processing.
+
+```
+rule "Parse any MAC address out of message field"
+when
+  has_field("message")
+then
+  let m = regex("([0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2})", to_string($message.message));
+  
+  // It's NULL if there was no match and will simply not be set internally by Graylog.
+  set_field("mac_address", m["0"]);
+end
+```
