@@ -33,7 +33,7 @@ Add a stream rule: _syslog_source_ **must** match exactly _UniFi Network Applica
 
 | Name           | Pattern                                          |
 | -------------- | ------------------------------------------------ |
-| UBNT_DEVICENAME| `([a-zA-Z_-]+)`                                  |
+| UBNT_DEVICENAME| `([a-zA-Z]+[_-])+([a-zA-Z]+[0-9])`               |
 | UBNT_HOSTNAME  | `([a-zA-Z-]+)`                                   |
 | UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                          |
 | UBNT_VERSION   | `((?:[0-9]+).(?:[0-9]+).(?:[0-9]+)\+(?:[0-9]+))` |
@@ -67,7 +67,7 @@ then
 end
 ```
 
-### Stage 1 (optional)
+### Stage 0.5 (optional)
 
 Drop irrelevant messages from a UDM Pro/SE related to DNS (no rule) and firewall (drop and log new).
 
@@ -91,7 +91,7 @@ then
 end
 ```
 
-### Stage 2
+### Stage 1
 
 Messages satisfying **none or more rules** in this stage, will continue to the next stage.
 
@@ -101,7 +101,7 @@ when
   true
 then
   let m = to_string(get_field("message"));
-  let extractedData = grok("%{UBNT_HOSTNAME:ap_hostname} %{UBNT_ID:ap_id},%{UBNT_DEVICENAME:ap_name}-%{UBNT_VERSION:ap_version}:%{GREEDYDATA:message}", m);
+  let extractedData = grok("%{UBNT_HOSTNAME:ap_hostname} %{UBNT_ID:ap_device_id},%{UBNT_DEVICENAME:ap_device_name}-%{UBNT_VERSION:ap_firmware_version}:%{GREEDYDATA:message}", m);
   set_fields(extractedData);
   remove_field("syslog_source");
 end
@@ -129,7 +129,7 @@ then
 end
 ```
 
-### Stage 3
+### Stage 2
 
 There are no further stages in this pipeline. 
 Once rules in this stage are applied, the pipeline will have finished processing.
