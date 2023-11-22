@@ -1,0 +1,1 @@
+# pfSense graylog configuration
