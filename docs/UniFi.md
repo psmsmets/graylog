@@ -67,10 +67,11 @@ then
 end
 ```
 
-### Stage 1
+### Stage 1 (optional)
+
+Drop irrelevant messages from a UDM Pro/SE related to DNS (no rule) and firewall (drop and log new).
 
 Messages satisfying **none or more rules** in this stage, will continue to the next stage.
-
 
 ```
 rule "Drop messages with drop and log new"
@@ -102,7 +103,6 @@ then
   let m = to_string(get_field("message"));
   let extractedData = grok("%{UBNT_HOSTNAME:ap_hostname} %{UBNT_ID:ap_id},%{UBNT_DEVICENAME:ap_name}-%{UBNT_VERSION:ap_version}:%{GREEDYDATA:message}", m);
   set_fields(extractedData);
-  //set_field("ap_model", join(get_field("ap_model"), "-"));
   remove_field("syslog_source");
 end
 ```
