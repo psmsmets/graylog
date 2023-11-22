@@ -4,28 +4,30 @@
 
 Create a local input named `UniFi Network Application` of type `Syslog UDP` and port `5140`.
 
-Add a static field with name=`syslog_source` and value=`UniFi Network Application`.
+Add a static field:
+* **name** = `syslog_source`
+* **value** = `UniFi Network Application`
+
 This field will be used to isolate all messages from the default stream.
 
 ## Streams
 
-
+Create a separate stream for the UniFi controller.
+Don't forget to start the stream (play button).
 
 ### Create stream
 
-Title = `UniFi Network Application`.
-
-Description = `Ubiquity Access Point logs`.
-
-
-Thick the box to remove matches from ‘Default Stream’.
+* **Title** = `UniFi Network Application`
+* **Description** = `Ubiquity Access Point logs`
+* Thick the box to remove matches from ‘Default Stream’
 
 ### Stream rules
 
-A message must match all of the following rules.
+Add a stream rule: _syslog_source_ **must** match exactly _UniFi Network Application_
 
-Add one rule: _syslog_source_ **must** match exactly _UniFi Network Application_
-
+* **Field** = `syslog_source`
+* **Type** = `match exactly`
+* **Value** = `UniFi Network Application`
 
 ## Grok patterns
 
