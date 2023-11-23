@@ -36,7 +36,8 @@ Add a stream rule: _syslog_source_ **must** match exactly _UniFi Network Applica
 | UBNT_DEVICENAME| `([a-zA-Z0-9_-]+)`                               |
 | UBNT_HOSTNAME  | `([a-zA-Z0-9-]+)`                                |
 | UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                          |
-| UBNT_VERSION   | `((?:[0-9]+).(?:[0-9]+).(?:[0-9]+)\+(?:[0-9]+))` |
+| UBNT_MAC       | `(([a-f0-9]{2}:){5}[a-f0-9]{2})`                 |
+| UBNT_VERSION   | `([0-9]+).([0-9]+).([0-9]+)\+([0-9]+)`           |
 
 
 ## Pipelines
