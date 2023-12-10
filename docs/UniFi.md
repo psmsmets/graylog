@@ -31,13 +31,14 @@ Add a stream rule: _syslog_source_ **must** match exactly _UniFi Network Applica
 
 ## Grok patterns
 
-| Name           | Pattern                                          |
-| -------------- | ------------------------------------------------ |
-| UBNT_DEVICENAME| `([a-zA-Z0-9_-]+)`                               |
-| UBNT_HOSTNAME  | `([a-zA-Z0-9-]+)`                                |
-| UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                          |
-| UBNT_MAC       | `(([a-f0-9]{2}:){5}[a-f0-9]{2})`                 |
-| UBNT_VERSION   | `([0-9]+).([0-9]+).([0-9]+)\+([0-9]+)`           |
+| Name           | Pattern                                                |
+| -------------- | ------------------------------------------------------ |
+| UBNT_DEVICENAME| `([a-zA-Z0-9_-]+)`                                     |
+| UBNT_HOSTNAME  | `([a-zA-Z0-9-]+)`                                      |
+| UBNT_ID        | `(([A-Fa-f0-9]{2}){6})`                                |
+| UBNT_MAC       | `(([a-fA-F0-9]{2}([:-]{1}|\s{0,1})){5}[a-fA-F0-9]{2})` |
+| UBNT_VERSION   | `(([0-9]+).([0-9]+).([0-9]+)\+([0-9]+))`               |
+| UBNT_VERSION   | `((?:[0-9]+).(?:[0-9]+).(?:[0-9]+)\+(?:[0-9]+))`       |
 
 
 ## Pipelines
@@ -51,8 +52,6 @@ Messages satisfying **all rules** in this stage, will continue to the next stage
 
 ```
 rule "Flatten json and parse"
-// From sample data : https://randomuser.me/api/
-// Api input path: *
 when
     true
 then
@@ -64,7 +63,6 @@ then
         );
     let rsJson = flatten_json(to_string(sJson), "flatten");
     set_fields(to_map(rsJson));
-    //remove_field("message");
 end
 ```
 
@@ -109,13 +107,14 @@ end
 ```
 
 ```
-rule "Parse BSSID mac address from logs"
+rule "Parse BSSID and STA mac address from logs"
 when
-  true
+  has_field("message")
 then
-  let m = to_string(get_field("message"));
-  let extractedData = grok("bssid=%{MAC:bssid}", m);
-  set_fields(extractedData);
+  let msg = to_string(get_field("message"));
+  let mac = grok("%{UBNT_MAC:bssid}%{GREEDYDATA:tmp}%{UBNT_MAC:mac_address}", msg);
+  set_fields(mac);
+  remove_field("tmp");
 end
 ```
 
@@ -124,9 +123,20 @@ rule "Parse STA mac address from logs"
 when
   true
 then
-  let m = to_string(get_field("message"));
-  let extractedData = grok("sta=%{MAC:bssid}", m);
-  set_fields(extractedData);
+  let msg = to_string(get_field("message"));
+  let mac = grok("sta=%{MAC:mac_address}", msg);
+  set_fields(mac);
+end
+```
+
+```
+rule "Parse BSSID mac address from logs"
+when
+  true
+then
+  let msg = to_string(get_field("message"));
+  let mac = grok("bssid=%{MAC:bssid}", msg);
+  set_fields(mac);
 end
 ```
 
@@ -138,11 +148,10 @@ Once rules in this stage are applied, the pipeline will have finished processing
 ```
 rule "Parse any MAC address out of message field"
 when
-  has_field("message")
+  NOT has_field("mac_address")
 then
-  let m = regex("([0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2})", to_string($message.message));
-  
-  // It's NULL if there was no match and will simply not be set internally by Graylog.
-  set_field("mac_address", m["0"]);
+  let msg = to_string(get_field("message"));
+  let mac = grok("%{UBNT_MAC:mac_address}", msg);
+  set_fields(mac);
 end
 ```
